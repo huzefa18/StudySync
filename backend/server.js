@@ -3,13 +3,12 @@ const express=require('express')
 const connectDB=require('./config/db')
 const cors=require('cors')
 const app=express();
-const documentRotes=require('./src/routes/documnetRoutes')
+const documentRoutes=require('./src/routes/documnetRoutes')
 const PORT=process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
-app.use('/api/documents',documentRotes);
-
+app.use('/api/documents', documentRoutes);
 app.get('/',(req,res)=>{
     res.send('API is running');
 })

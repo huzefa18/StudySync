@@ -23,7 +23,7 @@ const getDocuments=async(req,res)=>
     }
 }
 
-const uploadDocuments=async(req,res)=>{
+const uploadDocument=async(req,res)=>{
     try{
         if(!req.file){
             return res.status(400).json({
@@ -82,4 +82,4 @@ const deleteDocument=async(req,res)=>
         })
     }
 }
-module.exports={getDocuments,uploadDocuments,deleteDocument}
+module.exports={getDocuments,uploadDocument,deleteDocument}
