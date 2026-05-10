@@ -2,6 +2,7 @@ const Document = require('../models/Document');
 const fs =require('fs');
 const { model } = require('mongoose');
 const path=require('path');
+const extractTextFromPDF=require('../../services/pdfParser')
 
 const getDocuments=async(req,res)=>
 {
@@ -37,6 +38,20 @@ const uploadDocument=async(req,res)=>{
             fileType:req.file.mimetype,
             fileSize:req.file.size
         });
+        console.log(`file ${document.fileName} uploaded successfully, starting text extraction`);
+        extractTextFromPDF(req.file.path)
+        .then(async(text)=>
+        {
+            await Document.findByIdAndUpdate(document._id,{
+                extractedText:text,
+                processed:true,
+            });
+            console.log('text extracted and document updated successfully');
+        })
+        .catch((err)=>{
+            console.log(`error extracting text for document ${document._id}`,err);
+        });
+        
         res.status(201).json({
             success:true,
             data:document,

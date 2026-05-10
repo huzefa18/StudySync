@@ -5,6 +5,11 @@ const DocumentSchema= new mongoose.Schema({
         required:true,
         trim:true
     },
+    extractedText:{
+        type:String,
+        default:'',
+        
+    },
     fileType:{
         required:true,
         default:'application/pdf',
