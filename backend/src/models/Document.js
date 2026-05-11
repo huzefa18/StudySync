@@ -1,4 +1,12 @@
 const mongoose = require('mongoose');
+const PageSchema=new mongoose.Schema({
+    pageNumber:{type:Number,required:true},
+    text:{type:String ,required:true
+    },
+    hasDiagram:{type:Boolean,required:true},
+    imagePath:{type:String,default:null},
+    llmDescription:{type:String,default:''}
+},{_id:false});  
 const DocumentSchema= new mongoose.Schema({
     fileName:{
         type:String,
@@ -29,7 +37,13 @@ const DocumentSchema= new mongoose.Schema({
         type:Boolean,
         default:false,
 
-    }
+    },
+    extractionError:{
+        type:String,
+        default:null,
+    },
+     pages: [PageSchema],
+     hasDiagrams: { type: Boolean, default: false }
 
 },
 {
