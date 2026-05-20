@@ -1,4 +1,3 @@
-const { Metadata } = require('pdf-parse');
 const {chunkText}=require('./chunker');
 const {getEmbeddings}=require('./embedding');
 const{addChunks}=require('./vectorStore');

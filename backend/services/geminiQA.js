@@ -1,19 +1,19 @@
 require('dotenv').config();
 
-const {GoogleGenerativeAI} = require('@google/generative-ai');
+const {GoogleGenAI} = require('@google/genai');
 
-const genAI=new GoogleGenerativeAI({
-    apiKey:process.env.GOOGLE_API_KEY
+const ai=new GoogleGenAI({
+    apiKey:process.env.GOOGLE_API_KEY,
 });
 
 const generateAnswer=async(question,chunks)=>{
 
     try{
         const context=chunks.map((chunk,i)=>
-        {
+        
             `[source ${i+1} from ${chunk.metadata.documentName}]:${chunk.text}`
 
-        }).join('\n\n ----- \n\n');
+        ).join('\n\n ----- \n\n');
 
         const prompt=`You are StudySync, a helpful study assistant. Answer the student's question using ONLY the provided context from their uploaded documents.
 
@@ -28,10 +28,12 @@ STUDENT QUESTION: ${question}
 
 YOUR ANSWER:`;
         console.log('🤖 Asking Gemini...');
-        const model=genAI.getGenerativeModel({model: 'gemini-1.5-flash'})
-        const result=await model.generateContent(prompt);
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt
+            });
         console.log('✅ Received answer from Gemini');
-        return result.response.text();
+        return response.text;
     }
     catch(err)
     {
