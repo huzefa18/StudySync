@@ -1,70 +1,68 @@
-const fs= require('fs').promises;
-const path=require('path');
-const extractTextFromPDF=require('./pdfParser')
-const {fromBuffer}=require('pdf2pic');
+const fs = require('fs').promises;
+const path = require('path');
+const { pdf } = require('pdf-to-img');
 
-const processPDF=async(filePath,documentID)=>
-{
-   try{
-     const fullPath=path.resolve(filePath);
-    const fileBinary=await fs.readFile(fullPath);
-
-    const fullText=extractTextFromPDF(fileBinary);
-
-    const imgDir=path.join('uploads','images',documentID);
-    await fs.mkdir(imgDir,{recursive:true});
-
+const processPDF = async (filePath, documentId) => {
+  try {
+    const fullPath = path.resolve(filePath);
     
-    const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    const pdf = await getDocument({ data: new Uint8Array(fileBuffer) }).promise;
-
-    let fullText='';
-    const pages=[];
-
-    for(let i=1;i<pdf.numPages;i++)
-    {
-        const page=await pdf.getPage(i);
-        const textContent=await page.getTextContent();
-        const pageText=textContent.items.map((item)=>item.str).join(' ');
-        fullText+=pageText='\n\n';
-        const wordCount=pageText.trim().split(/\s+/).filter(w=>w.length>0).length;
-        const hasDiagram=wordCount<100;
-        pages.push({
-            pageNumber:i,
-            text:pageText,
-            hasDiagram
-        })
+    // Create image directory
+    const imageDir = path.join('uploads', 'images', documentId.toString());
+    await fs.mkdir(imageDir, { recursive: true });
+    
+    // Convert PDF to images (pure JS, no system deps)
+    const document = await pdf(fullPath, { scale: 1.5 });
+    
+    const pages = [];
+    let fullText = '';
+    let pageNum = 1;
+    
+    for await (const image of document) {
+      // Save image
+      const imagePath = path.join(imageDir, `page-${pageNum}.png`);
+      await fs.writeFile(imagePath, image);
+      
+      // For text, we still need pdfjs-dist
+      pages.push({
+        pageNumber: pageNum,
+        text: '', // Will fill separately
+        hasDiagram: false,
+        imagePath
+      });
+      
+      pageNum++;
     }
-
-    const converter=fromBuffer(fileBinary,{
-        density:100,
-        format:'png',
-        width:1200,
-        height:1600,
-        savePath:imgDir
-    });
-
-    const imageResults=converter.bulk(-1);
     
-    pages.forEach((page,index)=>
-    {
-        page.imagePath=imageResults[index]?.path||null;
-    });
-
-
-
-return {
-    fullText,
-    pages,
-    hasDiagrams:pages.some(p=>p.hasDiagram)
-}
-   }
-catch(err)
-{
-    console.log(`error processing PDF ${documentID}`,err);
+    // Now extract text with pdfjs-dist
+    const fileBuffer = await fs.readFile(fullPath);
+    const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const pdfDoc = await getDocument({ data: new Uint8Array(fileBuffer) }).promise;
+    
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      
+      fullText += pageText + '\n\n';
+      
+      if (pages[i - 1]) {
+        pages[i - 1].text = pageText;
+        const wordCount = pageText.trim().split(/\s+/).filter(w => w.length > 0).length;
+        pages[i - 1].hasDiagram = wordCount < 100;
+      }
+    }
+    
+    return {
+      fullText,
+      pages,
+      hasDiagrams: pages.some(p => p.hasDiagram)
+    };
+    
+  } catch (err) {
+    console.error('PDF processing failed:', err.message);
+    console.error('Stack:', err.stack);
     throw err;
+  }
+};
 
-}
-}
-
-module.exports=processPDF;
+module.exports = processPDF;

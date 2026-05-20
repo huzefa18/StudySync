@@ -1,52 +1,39 @@
 const mongoose = require('mongoose');
-const PageSchema=new mongoose.Schema({
-    pageNumber:{type:Number,required:true},
-    text:{type:String ,required:true
-    },
-    hasDiagram:{type:Boolean,required:true},
-    imagePath:{type:String,default:null},
-    llmDescription:{type:String,default:''}
-},{_id:false});  
-const DocumentSchema= new mongoose.Schema({
-    fileName:{
-        type:String,
-        required:true,
-        trim:true
-    },
-    extractedText:{
-        type:String,
-        default:'',
-        
-    },
-    fileType:{
-        required:true,
-        default:'application/pdf',
-        type:String,
-    },
-    fileSize:{
-        type:Number,
-        required:true,
-    },
-    filePath:{
-        type:String,
-        required:true,
-    }
-    ,
-    processed:{
-        required:true,
-        type:Boolean,
-        default:false,
 
-    },
-    extractionError:{
-        type:String,
-        default:null,
-    },
-     pages: [PageSchema],
-     hasDiagrams: { type: Boolean, default: false }
+const DocumentSchema = new mongoose.Schema({
+  fileName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  extractedText: {
+    type: String,
+    default: ''
+  },
+  fileType: {
+    type: String,
+    required: true,
+    default: 'application/pdf'
+  },
+  fileSize: {
+    type: Number,
+    required: true
+  },
+  filePath: {
+    type: String,
+    required: true
+  },
+  processed: {
+    type: Boolean,
+    default: false
+  },
+  // NEW: Track extraction failures
+  extractionError: {
+    type: String,
+    default: null
+  }
+}, {
+  timestamps: true
+});
 
-},
-{
-    timestamps:true,
-})
-module.exports=mongoose.model('Document',DocumentSchema);
+module.exports = mongoose.model('Document', DocumentSchema);

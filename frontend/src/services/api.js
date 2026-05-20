@@ -29,3 +29,7 @@ export const deleteDocument=async(id)=>
     const response=await api.delete(`/documents/${id}`);
     return response.data;
 }
+export const askQuestion = async (question) => {
+    const response = await api.post('/chat/ask', { question });
+    return response.data;
+};
