@@ -1,44 +1,46 @@
 require('dotenv').config();
+const { GoogleGenAI } = require('@google/genai');
 
-const {GoogleGenAI} = require('@google/genai');
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
-const ai=new GoogleGenAI({
-    apiKey:process.env.GOOGLE_API_KEY,
-});
+const generateAnswer = async (question, chunks, history = []) => {
+  try {
+    const context = chunks
+      .map((chunk, i) => `[Source ${i + 1} from "${chunk.metadata.documentName}"]: ${chunk.text}`)
+      .join('\n\n-----\n\n');
 
-const generateAnswer=async(question,chunks)=>{
+    const historyText = history.length > 0
+      ? history.map(m => `${m.role === 'user' ? 'Student' : 'StudySync'}: ${m.text}`).join('\n')
+      : '';
 
-    try{
-        const context=chunks.map((chunk,i)=>
-        
-            `[source ${i+1} from ${chunk.metadata.documentName}]:${chunk.text}`
+    const prompt = `You are StudySync, a helpful and precise study assistant. Answer the student's question using ONLY the context provided from their uploaded documents.
 
-        ).join('\n\n ----- \n\n');
+If the context does not have enough information, say: "I don't have enough information in your uploaded documents to answer this."
 
-        const prompt=`You are StudySync, a helpful study assistant. Answer the student's question using ONLY the provided context from their uploaded documents.
-
-If the context doesn't contain enough information, say: "I don't have enough information in your uploaded documents to answer this. Try uploading more relevant materials."
-
-Be concise but thorough. Use bullet points for clarity. Cite which source you're using.
-
-CONTEXT:
+Be concise. Use bullet points for lists. Cite which source you used.
+${historyText ? `\nPREVIOUS CONVERSATION:\n${historyText}\n` : ''}
+DOCUMENT CONTEXT:
 ${context}
 
 STUDENT QUESTION: ${question}
 
 YOUR ANSWER:`;
-        console.log('🤖 Asking Gemini...');
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt
-            });
-        console.log('✅ Received answer from Gemini');
-        return response.text;
-    }
-    catch(err)
-    {
-        console.error('Error generating answer with Gemini:', err);
-        throw err;
-    }
-}
-module.exports={generateAnswer}
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+
+    const text =
+      response?.text ||
+      response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      'I was unable to generate a response. Please try again.';
+
+    return text;
+  } catch (err) {
+    console.error('Gemini error:', err);
+    throw err;
+  }
+};
+
+module.exports = { generateAnswer };
