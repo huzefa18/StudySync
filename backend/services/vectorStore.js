@@ -6,9 +6,20 @@ if (chromaPath && !chromaPath.startsWith('http://') && !chromaPath.startsWith('h
     chromaPath = `https://${chromaPath}`;
 }
 
-const chromaClient = new ChromaClient({
-    path: chromaPath
-});
+let clientConfig = {};
+try {
+    const url = new URL(chromaPath);
+    clientConfig = {
+        host: url.hostname,
+        port: url.port ? parseInt(url.port, 10) : (url.protocol === 'https:' ? 443 : 80),
+        ssl: url.protocol === 'https:'
+    };
+} catch (e) {
+    clientConfig = { path: chromaPath };
+}
+
+const chromaClient = new ChromaClient(clientConfig);
+
 
 const COLLECTION_NAME = 'studySync';
 
