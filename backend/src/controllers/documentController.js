@@ -3,7 +3,8 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const extractTextFromPDF = require('../../services/pdfParser');
-const {indexDcoument}=require('../../services/indexer')
+const { indexDcoument } = require('../../services/indexer');
+const { deleteDocumentChunks } = require('../../services/vectorStore');
 
 
 const getDocuments = async (req, res) => {
@@ -107,6 +108,7 @@ const deleteDocument = async (req, res) => {
       fs.unlinkSync(filePath);
     }
 
+    await deleteDocumentChunks(req.params.id);
     await Document.findByIdAndDelete(req.params.id);
 
     res.status(200).json({

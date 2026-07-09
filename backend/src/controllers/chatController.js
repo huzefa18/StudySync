@@ -27,7 +27,7 @@ const askQuestion = async (req, res) => {
 
     const recentHistory = session.messages.slice(-6);
 
-    const relevantChunks = await findRelevantChunks(question, 5);
+    const relevantChunks = await findRelevantChunks(question, 5, documentId);
 
     if (relevantChunks.length === 0) {
       return res.status(200).json({
