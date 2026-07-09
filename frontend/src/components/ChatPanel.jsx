@@ -50,7 +50,7 @@ export default function ChatPanel({ selected }) {
         sources: res.sources
       }]);
     } catch (err) {
-      const errMsg = err?.response?.data?.message || 'Could not process your question. Please try again.';
+      const errMsg = err?.response?.data?.error || err?.response?.data?.message || 'Could not process your question. Please try again.';
       setMessages(prev => [...prev, { role: 'ai', text: `⚠️ ${errMsg}` }]);
     } finally {
       setLoading(false);
