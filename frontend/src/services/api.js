@@ -1,7 +1,11 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const api = axios.create({ baseURL: API_URL });
+let apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+if (apiBaseUrl && !apiBaseUrl.endsWith('/api') && !apiBaseUrl.endsWith('/api/')) {
+  apiBaseUrl = apiBaseUrl.endsWith('/') ? `${apiBaseUrl}api` : `${apiBaseUrl}/api`;
+}
+
+const api = axios.create({ baseURL: apiBaseUrl });
 
 export const getDocuments = async () => {
   const response = await api.get('/documents');
