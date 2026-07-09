@@ -15,12 +15,21 @@ This guide provides step-by-step instructions to deploy the StudySyncAI applicat
    - Replace `<password>` with your database user's password and append `/studysync` to specify the database.
 
 ### B. ChromaDB (Vector Store)
-To host ChromaDB in production, you can run it as a service using Docker on Railway, Render, or any VPS:
-- **Using Railway (Quickest Docker deployment)**:
-  1. Click **New Project** -> **Deploy from GitHub repo** or **Deploy a Template**.
-  2. Select the official image `chromadb/chroma` or search for the Chroma template.
-  3. Railway will deploy it and expose a public URL (e.g., `https://chroma-production-xxx.up.railway.app`).
-- Copy the public URL. This will be your `CHROMADB_URL`.
+To host ChromaDB in production, we run it as a Docker service on Render's free tier using the provided `chromadb-service` config:
+- **Using Render**:
+  1. Commit and push the new `chromadb-service` folder to your GitHub repository.
+  2. Log in to [Render](https://render.com/).
+  3. Click **New +** -> **Web Service**.
+  4. Select your connected GitHub repository.
+  5. Configure the settings:
+     - **Name**: `studysync-chromadb`
+     - **Environment**: `Docker` (Ensure this is set to **Docker**, which will read our Dockerfile. If you do not see Docker, make sure you pointed to the correct repository containing the `chromadb-service` folder).
+     - **Root Directory**: `chromadb-service`
+     - **Instance Type**: `Free`
+     - **Start Command**: You can leave this **blank** (Render will automatically use the `CMD` defined in our `Dockerfile`). If Render forces you to enter one, use: `uvicorn chromadb.app:app --host 0.0.0.0 --port 10000`
+  6. Click **Deploy Web Service**.
+  7. Copy the public URL provided by Render (e.g., `https://studysync-chromadb.onrender.com`). This will be your `CHROMADB_URL`.
+
 
 ### C. Google Gemini API
 1. Visit the [Google AI Studio](https://aistudio.google.com/).
