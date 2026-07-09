@@ -24,6 +24,8 @@ export default function App() {
     }
   }, [darkMode]);
 
+  const [deleting, setDeleting] = useState(false);
+
   const fetchDocuments = async () => {
     try {
       setLoading(true);
@@ -53,7 +55,9 @@ export default function App() {
   };
 
   const handleDelete = async (id) => {
+    if (deleting) return;
     try {
+      setDeleting(true);
       await deleteDocument(id);
       await fetchDocuments();
       if (selected?._id === id) {
@@ -61,6 +65,8 @@ export default function App() {
       }
     } catch (err) {
       console.error("Error deleting file:", err);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -95,6 +101,7 @@ export default function App() {
             selected={selected}
             onSelect={setSelected}
             onDelete={handleDelete}
+            deleting={deleting}
           />
         </div>
       </div>

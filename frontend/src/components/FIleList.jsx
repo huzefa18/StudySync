@@ -1,9 +1,10 @@
-export default function FileList({ documents, loading, selected, onSelect, onDelete }) {
+export default function FileList({ documents, loading, selected, onSelect, onDelete, deleting }) {
   const formatSize = (byte) => {
     if (byte < 1024) return byte + " B";
     if (byte < 1024 * 1024) return (byte / 1024).toFixed(1) + " KB";
     return (byte / (1024 * 1024)).toFixed(1) + " MB";
   };
+
 
   if (loading) {
     return (
@@ -74,11 +75,12 @@ export default function FileList({ documents, loading, selected, onSelect, onDel
               </div>
 
               <button
+                disabled={deleting}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete(doc._id);
                 }}
-                className="text-slate-400 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer"
+                className={`text-slate-400 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 ${deleting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Delete document"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
