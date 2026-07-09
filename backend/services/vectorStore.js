@@ -1,8 +1,13 @@
 const { ChromaClient } = require('chromadb');
 require('dotenv').config();
 
+let chromaPath = process.env.CHROMADB_URL || process.env.CHROMA_URL || 'http://localhost:8000';
+if (chromaPath && !chromaPath.startsWith('http://') && !chromaPath.startsWith('https://')) {
+    chromaPath = `https://${chromaPath}`;
+}
+
 const chromaClient = new ChromaClient({
-    path: process.env.CHROMADB_URL || process.env.CHROMA_URL || 'http://localhost:8000'
+    path: chromaPath
 });
 
 const COLLECTION_NAME = 'studySync';
