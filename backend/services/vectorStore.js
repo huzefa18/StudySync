@@ -68,7 +68,13 @@ const searchQuery = async (queryVector, topK = 5, documentId = null) => {
 const deleteDocumentChunks = async (documentId) => {
     const collection = await getOrCreateChromaCollection();
     const all = await collection.get();
-    const idsToDelete = all.ids.filter((_, i) => all.metadatas[i].documentId === documentId.toString());
+    if (!all || !all.ids || all.ids.length === 0) return;
+    
+    const idsToDelete = all.ids.filter((_, i) => {
+        const meta = all.metadatas ? all.metadatas[i] : null;
+        return meta && meta.documentId && meta.documentId.toString() === documentId.toString();
+    });
+    
     if (idsToDelete.length > 0) {
         await collection.delete({ ids: idsToDelete });
         console.log(`🗑️ Deleted ${idsToDelete.length} chunks for document ${documentId}`);
