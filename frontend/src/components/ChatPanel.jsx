@@ -133,7 +133,13 @@ export default function ChatPanel({ selected }) {
                     ? 'bg-gradient-to-tr from-indigo-600 to-purple-600 text-white rounded-br-none'
                     : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 rounded-bl-none'
                 }`}>
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                  {isUser ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                  ) : (
+                    <div className="leading-relaxed">
+                      <MarkdownText text={msg.text} />
+                    </div>
+                  )}
 
                   {!isUser && (
                     <button
@@ -225,6 +231,100 @@ export default function ChatPanel({ selected }) {
         </div>
         <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-2">Enter to send · Shift+Enter for new line</p>
       </div>
+    </div>
+  );
+}
+
+function parseInline(text) {
+  const parts = [];
+  let currentIdx = 0;
+  
+  // Regexp to find either **bold** or `code`
+  const regex = /(\*\*.*?\*\*|`.*?`)/g;
+  let match;
+  
+  while ((match = regex.exec(text)) !== null) {
+    const matchIdx = match.index;
+    
+    // Add text before match
+    if (matchIdx > currentIdx) {
+      parts.push(text.slice(currentIdx, matchIdx));
+    }
+    
+    const matchedStr = match[0];
+    if (matchedStr.startsWith('**') && matchedStr.endsWith('**')) {
+      parts.push(
+        <strong key={matchIdx} className="font-bold text-slate-900 dark:text-white">
+          {matchedStr.slice(2, -2)}
+        </strong>
+      );
+    } else if (matchedStr.startsWith('`') && matchedStr.endsWith('`')) {
+      parts.push(
+        <code key={matchIdx} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono text-indigo-600 dark:text-indigo-400">
+          {matchedStr.slice(1, -1)}
+        </code>
+      );
+    }
+    
+    currentIdx = regex.lastIndex;
+  }
+  
+  if (currentIdx < text.length) {
+    parts.push(text.slice(currentIdx));
+  }
+  
+  return parts.length > 0 ? parts : text;
+}
+
+function MarkdownText({ text }) {
+  if (!text) return null;
+  
+  // Split by line
+  const lines = text.split('\n');
+  
+  return (
+    <div className="space-y-2">
+      {lines.map((line, idx) => {
+        let trimmed = line.trim();
+        
+        // Headers (e.g. ### Header)
+        if (trimmed.startsWith('### ')) {
+          return <h4 key={idx} className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-2 mb-1">{parseInline(trimmed.slice(4))}</h4>;
+        }
+        if (trimmed.startsWith('## ')) {
+          return <h3 key={idx} className="text-base font-bold text-slate-900 dark:text-slate-50 mt-3 mb-2">{parseInline(trimmed.slice(3))}</h3>;
+        }
+        if (trimmed.startsWith('# ')) {
+          return <h2 key={idx} className="text-lg font-bold text-slate-900 dark:text-slate-50 mt-4 mb-2">{parseInline(trimmed.slice(2))}</h2>;
+        }
+        
+        // Bullet lists
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          return (
+            <ul key={idx} className="list-disc pl-5 my-0.5">
+              <li className="text-slate-700 dark:text-slate-300 leading-relaxed">{parseInline(trimmed.slice(2))}</li>
+            </ul>
+          );
+        }
+        
+        // Numbered lists
+        const numMatch = trimmed.match(/^(\d+)\.\s(.*)/);
+        if (numMatch) {
+          return (
+            <ol key={idx} className="list-decimal pl-5 my-0.5" start={numMatch[1]}>
+              <li className="text-slate-700 dark:text-slate-300 leading-relaxed">{parseInline(numMatch[2])}</li>
+            </ol>
+          );
+        }
+        
+        // Empty lines
+        if (trimmed === '') {
+          return <div key={idx} className="h-1.5" />;
+        }
+        
+        // plain paragraph
+        return <p key={idx} className="text-slate-700 dark:text-slate-300 leading-relaxed">{parseInline(line)}</p>;
+      })}
     </div>
   );
 }
